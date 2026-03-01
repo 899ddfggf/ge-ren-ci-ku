@@ -25,4 +25,13 @@
    ```bash
    # 使用 Python 3
    python -m http.server 8000
-   
+   数据存储
+默认存储在浏览器的 localStorage 中
+支持导出到本地文件备份
+支持从本地文件导入数据
+技术栈
+HTML5
+Tailwind CSS
+Font Awesome
+原生 JavaScript
+
