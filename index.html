@@ -1,0 +1,2124 @@
+<html lang="zh-CN"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人词汇管家与记忆训练师</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6', // 知识蓝
+                        secondary: '#F9FAFB', // 柔和米色
+                        accent: '#EF4444', // 强调红
+                        textDark: '#1F2937', // 深灰文本
+                        textLight: '#6B7280', // 中灰文本
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-in': 'slideIn 0.3s ease-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideIn: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .glass-effect {
+                @apply bg-white bg-opacity-80 backdrop-blur-md;
+            }
+            .card-shadow {
+                @apply shadow-md hover:shadow-lg transition-shadow duration-300;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+            }
+            .btn-secondary {
+                @apply bg-gray-200 text-textDark px-4 py-2 rounded-md hover:bg-gray-300 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50;
+            }
+            .input-field {
+                @apply border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+            }
+            .important-tag {
+                @apply text-accent font-bold;
+            }
+            .category-tag {
+                @apply bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full;
+            }
+        }
+    </style>
+</head>
+<body class="bg-secondary min-h-screen font-sans text-textDark">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- 顶部标题 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-bold text-primary mb-2">个人词汇管家与记忆训练师</h1>
+            <p class="text-textLight">构建你的个性化好词库，提升词汇量与表达能力</p>
+        </header>
+
+        <!-- 主内容区 -->
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- 左侧导航 -->
+            <aside class="w-full md:w-1/4">
+                <nav class="bg-white rounded-lg shadow-md p-4 sticky top-4">
+                    <ul class="space-y-2">
+                        <li>
+                            <button id="nav-home" class="w-full text-left py-3 px-4 rounded-md bg-primary text-white flex items-center">
+                                <i class="fa fa-home mr-2"></i> 首页
+                            </button>
+                        </li>
+                        <li>
+                            <button id="nav-add" class="w-full text-left py-3 px-4 rounded-md hover:bg-gray-100 flex items-center">
+                                <i class="fa fa-plus-circle mr-2"></i> 添加词汇
+                            </button>
+                        </li>
+                        <li>
+                            <button id="nav-library" class="w-full text-left py-3 px-4 rounded-md hover:bg-gray-100 flex items-center">
+                                <i class="fa fa-book mr-2"></i> 查看词库
+                            </button>
+                        </li>
+                        <li>
+                            <button id="nav-training" class="w-full text-left py-3 px-4 rounded-md hover:bg-gray-100 flex items-center">
+                                <i class="fa fa-graduation-cap mr-2"></i> 记忆训练
+                            </button>
+                        </li>
+                        <li>
+                            <button id="nav-settings" class="w-full text-left py-3 px-4 rounded-md hover:bg-gray-100 flex items-center">
+                                <i class="fa fa-cog mr-2"></i> 设置
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <div class="mt-8 pt-4 border-t border-gray-200">
+                        <h3 class="font-medium text-textLight mb-2">词库统计</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span>总词汇量:</span>
+                                <span id="stats-total" class="font-medium">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>重点词汇:</span>
+                                <span id="stats-important" class="font-medium">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>已分类别:</span>
+                                <span id="stats-categories" class="font-medium">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </aside>
+
+            <!-- 右侧主内容 -->
+            <main class="w-full md:w-3/4">
+                <!-- 首页内容 -->
+                <section id="section-home" class="bg-white rounded-lg shadow-md p-6 animate-fade-in">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold mb-4">欢迎使用个人词汇管家</h2>
+                        <p class="text-textLight max-w-2xl mx-auto">
+                            这是一个帮助你收集、管理和记忆好词好句的智能工具。你可以添加新词汇，查看和管理你的词库，
+                            并通过科学的记忆训练掌握这些词汇。
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                        <div class="bg-blue-50 rounded-lg p-6 text-center card-shadow">
+                            <div class="text-primary text-4xl mb-4">
+                                <i class="fa fa-plus-circle"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">添加词汇</h3>
+                            <p class="text-textLight text-sm mb-4">
+                                收集和整理你遇到的好词好句，为它们添加释义和分类
+                            </p>
+                            <button id="home-add-btn" class="btn-primary">
+                                开始添加
+                            </button>
+                        </div>
+
+                        <div class="bg-blue-50 rounded-lg p-6 text-center card-shadow">
+                            <div class="text-primary text-4xl mb-4">
+                                <i class="fa fa-book"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">查看词库</h3>
+                            <p class="text-textLight text-sm mb-4">
+                                浏览、搜索和管理你的个性化词汇库，按不同方式排序和筛选
+                            </p>
+                            <button id="home-library-btn" class="btn-primary">
+                                查看词库
+                            </button>
+                        </div>
+
+                        <div class="bg-blue-50 rounded-lg p-6 text-center card-shadow">
+                            <div class="text-primary text-4xl mb-4">
+                                <i class="fa fa-graduation-cap"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">记忆训练</h3>
+                            <p class="text-textLight text-sm mb-4">
+                                通过多种训练模式和题型，科学高效地记忆和掌握词汇
+                            </p>
+                            <button id="home-training-btn" class="btn-primary">
+                                开始训练
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 bg-gray-50 rounded-lg p-6">
+                        <h3 class="text-xl font-semibold mb-4">最近添加的词汇</h3>
+                        <div id="recent-words" class="space-y-4">
+                            <p class="text-textLight text-center py-4">你还没有添加任何词汇，点击"添加词汇"开始使用</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 添加词汇内容 -->
+                <section id="section-add" class="bg-white rounded-lg shadow-md p-6 hidden animate-fade-in">
+                    <h2 class="text-2xl font-bold mb-6">添加新词汇</h2>
+                    
+                    <form id="add-word-form" class="space-y-6">
+                        <div>
+                            <label for="word-input" class="block text-sm font-medium text-textDark mb-1">词汇/成语/佳句</label>
+                            <input type="text" id="word-input" class="input-field w-full" placeholder="请输入要添加的词汇" required="">
+                        </div>
+                        
+                        <div>
+                            <label for="definition-input" class="block text-sm font-medium text-textDark mb-1">基本含义</label>
+                            <textarea id="definition-input" rows="3" class="input-field w-full" placeholder="请输入词汇的基本含义和引申义"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="context-input" class="block text-sm font-medium text-textDark mb-1">近义词</label>
+                            <textarea id="context-input" rows="2" class="input-field w-full" placeholder="请输入词汇的近义词，多个近义词请用逗号分隔"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label for="example-input" class="block text-sm font-medium text-textDark mb-1">使用示例 (每行一个)</label>
+                            <textarea id="example-input" rows="3" class="input-field w-full" placeholder="请输入1-2个简短的使用示例"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-textDark mb-1">分类</label>
+                            <div id="category-selector" class="flex flex-wrap gap-2 mb-2">
+                                <!-- 分类标签将在这里动态生成 -->
+                            </div>
+                            <div class="flex items-center mt-2">
+                                <input type="text" id="new-category-input" class="input-field w-full mr-2" placeholder="自定义新分类">
+                                <button type="button" id="add-category-btn" class="btn-secondary whitespace-nowrap">添加分类</button>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="important-checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                            <label for="important-checkbox" class="ml-2 block text-sm text-textDark">标记为重点词</label>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" id="cancel-add-btn" class="btn-secondary">取消</button>
+                            <button type="submit" class="btn-primary">保存词汇</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- 查看词库内容 -->
+                <section id="section-library" class="bg-white rounded-lg shadow-md p-6 hidden animate-fade-in">
+                    <h2 class="text-2xl font-bold mb-6">我的词库</h2>
+                    
+                    <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="flex-1">
+                            <label for="filter-category" class="block text-sm font-medium text-textDark mb-1">按分类筛选</label>
+                            <select id="filter-category" class="input-field w-full">
+                                <option value="all">全部分类</option>
+                                <!-- 分类选项将在这里动态生成 -->
+                            </select>
+                        </div>
+                        
+                        <div class="flex-1">
+                            <label for="sort-method" class="block text-sm font-medium text-textDark mb-1">排序方式</label>
+                            <select id="sort-method" class="input-field w-full">
+                                <option value="time-desc">添加时间 (新→旧)</option>
+                                <option value="time-asc">添加时间 (旧→新)</option>
+                                <option value="alphabetical">词汇首字母</option>
+                                <option value="important">重点词优先</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex-1">
+                            <label for="search-input" class="block text-sm font-medium text-textDark mb-1">搜索词汇</label>
+                            <div class="relative">
+                                <input type="text" id="search-input" class="input-field w-full pl-10" placeholder="搜索词汇...">
+                                <i class="fa fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-textLight uppercase tracking-wider">词汇</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-textLight uppercase tracking-wider">分类</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-textLight uppercase tracking-wider">释义</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-textLight uppercase tracking-wider">示例</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-textLight uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vocabulary-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- 词汇数据将在这里动态生成 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="no-words-message" class="text-center py-8 text-textLight">
+                        你的词库中还没有词汇，点击"添加词汇"开始收集吧！
+                    </div>
+                </section>
+
+                <!-- 记忆训练内容 -->
+                <section id="section-training" class="bg-white rounded-lg shadow-md p-6 hidden animate-fade-in">
+                    <!-- 训练设置 -->
+                    <div id="training-settings" class="animate-fade-in">
+                        <h2 class="text-2xl font-bold mb-6">记忆训练</h2>
+                        
+                        <div class="bg-blue-50 rounded-lg p-6 mb-6">
+                            <h3 class="text-lg font-semibold mb-4">训练设置</h3>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-textDark mb-1">训练模式</label>
+                                    <div class="flex flex-wrap gap-3">
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="training-mode" value="random" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" checked="">
+                                            <span class="ml-2 text-sm text-textDark">随机抽取</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="training-mode" value="category" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                            <span class="ml-2 text-sm text-textDark">指定分类</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="training-mode" value="important" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                            <span class="ml-2 text-sm text-textDark">重点词优先</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div id="category-selection" class="hidden">
+                                    <label for="training-category" class="block text-sm font-medium text-textDark mb-1">选择分类</label>
+                                    <select id="training-category" class="input-field w-full">
+                                        <!-- 分类选项将在这里动态生成 -->
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="word-count" class="block text-sm font-medium text-textDark mb-1">训练词汇数量</label>
+                                    <input type="number" id="word-count" min="5" max="50" value="10" class="input-field w-full">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-textDark mb-1">训练题型</label>
+                                    <div class="flex flex-wrap gap-3">
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="training-type" value="guess-from-definition" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" checked="">
+                                            <span class="ml-2 text-sm text-textDark">根据释义猜词</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="checkbox" name="training-type" value="guess-from-category" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" checked="">
+                                            <span class="ml-2 text-sm text-textDark">根据分类猜词</span>
+                                        </label>
+
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button id="start-training-btn" class="btn-primary px-8 py-3 text-lg">
+                                    开始训练
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 训练进行中 -->
+                    <div id="training-in-progress" class="hidden animate-fade-in">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold">记忆训练</h2>
+                            <div class="text-sm text-textLight">
+                                进度: <span id="training-progress">0/0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div id="question-container" class="mb-6">
+                                <!-- 问题内容将在这里动态生成 -->
+                            </div>
+                            
+                            <div id="answer-container" class="hidden">
+                                <!-- 答案内容将在这里动态生成 -->
+                            </div>
+                            
+                            <div id="feedback-container" class="hidden mb-4 p-4 rounded-md">
+                                <!-- 反馈内容将在这里动态生成 -->
+                            </div>
+                            
+                            <div class="flex justify-between mt-6">
+                                <button id="prev-question-btn" class="btn-secondary" disabled="">上一题</button>
+                                <button id="show-answer-btn" class="btn-secondary">查看答案</button>
+                                <button id="next-question-btn" class="btn-primary">下一题</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 训练结果 -->
+                    <div id="training-results" class="hidden animate-fade-in">
+                        <h2 class="text-2xl font-bold mb-6">训练结果</h2>
+                        
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div class="text-center mb-6">
+                                <div class="inline-block p-4 rounded-full bg-blue-100 text-primary text-4xl mb-4">
+                                    <i class="fa fa-check-circle"></i>
+                                </div>
+                                <h3 class="text-xl font-bold">训练完成！</h3>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div class="bg-gray-50 rounded-lg p-4 text-center">
+                                    <p class="text-textLight text-sm">总题数</p>
+                                    <p id="total-questions" class="text-2xl font-bold">0</p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-4 text-center">
+                                    <p class="text-textLight text-sm">正确题数</p>
+                                    <p id="correct-questions" class="text-2xl font-bold text-green-500">0</p>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-4 text-center">
+                                    <p class="text-textLight text-sm">正确率</p>
+                                    <p id="correct-rate" class="text-2xl font-bold">0%</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <h4 class="font-medium mb-2">复习建议</h4>
+                                <div id="review-suggestions" class="text-textDark">
+                                    <!-- 复习建议将在这里动态生成 -->
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-between">
+                                <button id="review-words-btn" class="btn-secondary">
+                                    复习错误词汇
+                                </button>
+                                <button id="restart-training-btn" class="btn-primary">
+                                    重新开始训练
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 设置内容 -->
+                <section id="section-settings" class="bg-white rounded-lg shadow-md p-6 hidden animate-fade-in">
+                    <h2 class="text-2xl font-bold mb-6">设置</h2>
+                    
+                    <div class="space-y-8">
+                        <div>
+            <h3 class="text-lg font-semibold mb-4">数据管理</h3>
+            <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                <h4 class="font-medium mb-2">存储状态</h4>
+                <div id="storage-status" class="text-sm text-textDark">
+                    <p>当前存储位置: <span id="storage-location">本地存储 (localStorage)</span></p>
+                    <p class="mt-1">上次保存时间: <span id="last-saved-time">未知</span></p>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <button id="export-data-btn" class="btn-secondary w-full flex items-center justify-center">
+                    <i class="fa fa-download mr-2"></i> 导出词库数据
+                </button>
+                <button id="save-to-file-btn" class="btn-secondary w-full flex items-center justify-center">
+                    <i class="fa fa-save mr-2"></i> 保存到本地文件
+                </button>
+                <div class="flex items-center">
+                    <input type="file" id="import-data-input" accept=".json" class="hidden">
+                    <label for="import-data-input" class="btn-secondary w-full flex items-center justify-center cursor-pointer">
+                        <i class="fa fa-upload mr-2"></i> 导入词库数据
+                    </label>
+                </div>
+                <button id="clear-data-btn" class="btn-secondary w-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center">
+                    <i class="fa fa-trash mr-2"></i> 清空所有数据
+                </button>
+            </div>
+        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">分类管理</h3>
+                            <div id="categories-list" class="space-y-2 mb-4">
+                                <!-- 分类列表将在这里动态生成 -->
+                            </div>
+                            <div class="flex">
+                                <input type="text" id="new-category-name" class="input-field w-full mr-2" placeholder="新分类名称">
+                                <button id="create-category-btn" class="btn-primary whitespace-nowrap">创建分类</button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="text-lg font-semibold mb-4">关于</h3>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <p class="text-textDark mb-2">个人词汇管家与记忆训练师 v1.0</p>
+                                <p class="text-textLight text-sm">
+                                    这是一个帮助你收集、管理和记忆好词好句的智能工具。通过科学的记忆训练方法，
+                                    帮助你高效掌握和运用这些词汇，提升你的语言表达能力。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 animate-slide-in">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 id="modal-title" class="text-lg font-semibold">模态框标题</h3>
+                    <button id="close-modal-btn" class="text-gray-400 hover:text-gray-500">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                <div id="modal-content" class="mb-6">
+                    <!-- 模态框内容将在这里动态生成 -->
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button id="modal-cancel-btn" class="btn-secondary">取消</button>
+                    <button id="modal-confirm-btn" class="btn-primary">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 全局变量
+        let vocabularyData = [];
+        let categoriesData = [
+            { id: 'other', name: '其他', default: true },
+            { id: 'local', name: '土言流语', default: true },
+            { id: 'party', name: '党政术语', default: true },
+            { id: 'medical', name: '医学术语', default: true },
+            { id: 'economic', name: '经济术语', default: true },
+            { id: 'legal', name: '公检法术语', default: true },
+            { id: 'polite', name: '礼貌语', default: true },
+            { id: 'service', name: '服务消费业术语', default: true },
+            { id: 'angry', name: '狠话气话', default: true },
+            { id: 'emotion', name: '情感表达类', default: true },
+            { id: 'scenery', name: '景物描写类', default: true },
+            { id: 'philosophy', name: '哲理思辨类', default: true },
+            { id: 'character', name: '人物刻画类', default: true }
+        ];
+        let currentSection = 'section-home';
+        let trainingData = {
+            words: [],
+            currentIndex: 0,
+            answers: [],
+            questionTypes: []
+        };
+
+        // DOM 加载完成后执行
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 初始化数据
+            await initData();
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 更新存储状态
+            updateStorageStatus();
+            
+            // 绑定导航事件
+            bindNavigationEvents();
+            
+            // 绑定表单事件
+            bindFormEvents();
+            
+            // 绑定训练事件
+            bindTrainingEvents();
+            
+            // 绑定设置事件
+            bindSettingsEvents();
+            
+            // 绑定模态框事件
+            bindModalEvents();
+            
+            // 加载最近词汇
+            loadRecentWords();
+            
+            // 初始化分类选择器
+            initCategorySelectors();
+        });
+
+        // 初始化数据
+        async function initData() {
+            // 清除旧的分类数据，使用新的默认分类
+            localStorage.removeItem('categoriesData');
+            
+            try {
+                // 尝试从本地文件加载数据
+                await loadFromFile();
+            } catch (error) {
+                console.log('从文件加载失败，尝试从localStorage加载:', error);
+                // 从 localStorage 加载数据
+                const savedVocabulary = localStorage.getItem('vocabularyData');
+                
+                if (savedVocabulary) {
+                    vocabularyData = JSON.parse(savedVocabulary);
+                }
+                
+                // 不加载旧的分类数据，使用新的默认分类
+                
+                // 如果有数据，提示用户保存到本地文件
+                if (vocabularyData.length > 0 || categoriesData.length > 5) {
+                    showModal('数据存储提示', '检测到您有词汇数据，是否将其保存到本地文件以便长期保存？', '暂不保存', '保存到文件', null, async function() {
+                        // 这里不直接调用saveToFile，而是在设置页面添加一个明确的保存按钮
+                        showSection('section-settings');
+                        showModal('保存提示', '请在设置页面点击"导出词库数据"按钮来保存到本地文件。');
+                    });
+                }
+            }
+            
+            // 如果没有词汇数据，添加一些示例词汇
+            if (vocabularyData.length === 0) {
+                addExampleWords();
+                // 提示用户保存示例数据到本地文件
+                setTimeout(function() {
+                    showModal('数据存储提示', '已添加示例词汇，是否将其保存到本地文件以便长期保存？', '暂不保存', '保存到文件', null, function() {
+                        // 这里不直接调用saveToFile，而是在设置页面添加一个明确的保存按钮
+                        showSection('section-settings');
+                        showModal('保存提示', '请在设置页面点击"导出词库数据"按钮来保存到本地文件。');
+                    });
+                }, 1000);
+            }
+        }
+        
+        // 从本地文件加载数据
+        async function loadFromFile() {
+            try {
+                // 检查是否有权限访问文件系统
+                if (!window.showOpenFilePicker) {
+                    throw new Error('浏览器不支持文件系统API');
+                }
+                
+                // 如果没有文件句柄，提示用户选择文件
+                if (!window.vocabularyFileHandle) {
+                    try {
+                        const [handle] = await window.showOpenFilePicker({
+                            types: [{
+                                description: 'JSON文件',
+                                accept: { 'application/json': ['.json'] }
+                            }],
+                            excludeAcceptAllOption: true,
+                            multiple: false
+                        });
+                        
+                        window.vocabularyFileHandle = handle;
+                    } catch (error) {
+                        // 用户取消选择文件，不抛出错误
+                        console.log('用户取消选择文件');
+                        throw new Error('用户取消选择文件');
+                    }
+                }
+                
+                const file = await window.vocabularyFileHandle.getFile();
+                const content = await file.text();
+                const data = JSON.parse(content);
+                
+                if (data.vocabulary && data.categories) {
+                    vocabularyData = data.vocabulary;
+                    categoriesData = data.categories;
+                    console.log('数据已从文件加载');
+                    // 显示加载成功提示
+                    showModal('加载成功', '您的词库已从本地文件加载！');
+                } else {
+                    throw new Error('无效的数据文件格式');
+                }
+            } catch (error) {
+                console.error('加载文件失败:', error);
+                throw error;
+            }
+        }
+
+        // 添加示例词汇
+        function addExampleWords() {
+            const examples = [
+                {
+                    word: '栩栩如生',
+                    definition: '形容艺术形象非常生动逼真，像活的一样。',
+                    context: '多用于描述绘画、雕塑、文学作品中的形象描写。',
+                    examples: ['这幅画中的花鸟栩栩如生，仿佛要从画中飞出来。', '他的描述生动有趣，把人物刻画得栩栩如生。'],
+                    categories: ['writing', 'character'],
+                    isImportant: false,
+                    addTime: Date.now() - 86400000 * 5,
+                    reviewCount: 0,
+                    lastReviewTime: null,
+                    correctRate: 1
+                },
+                {
+                    word: '山明水秀',
+                    definition: '形容山水风景优美。',
+                    context: '用于描述自然风光、旅游胜地等。',
+                    examples: ['这个小镇山明水秀，是个避暑的好地方。', '江南地区山明水秀，历来是文人墨客的向往之地。'],
+                    categories: ['scenery'],
+                    isImportant: false,
+                    addTime: Date.now() - 86400000 * 3,
+                    reviewCount: 0,
+                    lastReviewTime: null,
+                    correctRate: 1
+                },
+                {
+                    word: '深思熟虑',
+                    definition: '深入细致地考虑。',
+                    context: '用于描述人在做决定或发表意见前的谨慎态度。',
+                    examples: ['这个计划是经过深思熟虑后制定的，应该能够顺利实施。', '他深思熟虑后，终于做出了人生中的重要决定。'],
+                    categories: ['philosophy'],
+                    isImportant: true,
+                    addTime: Date.now() - 86400000,
+                    reviewCount: 1,
+                    lastReviewTime: Date.now() - 3600000,
+                    correctRate: 0.5
+                }
+            ];
+            
+            examples.forEach(word => {
+                word.id = generateId();
+                vocabularyData.push(word);
+            });
+            
+            saveData();
+        }
+
+        // 保存数据到本地文件
+        function saveData() {
+            // 首先保存到localStorage作为备份
+            localStorage.setItem('vocabularyData', JSON.stringify(vocabularyData));
+            localStorage.setItem('categoriesData', JSON.stringify(categoriesData));
+            localStorage.setItem('lastSaved', new Date().toISOString());
+            
+            // 只有当用户已经选择了文件时才尝试保存到本地文件
+            if (window.vocabularyFileHandle) {
+                saveToFile();
+            }
+            
+            updateStats();
+            // 更新存储状态
+            updateStorageStatus();
+        }
+        
+        // 更新存储状态显示
+        function updateStorageStatus() {
+            const storageLocation = document.getElementById('storage-location');
+            const lastSavedTime = document.getElementById('last-saved-time');
+            
+            if (window.vocabularyFileHandle) {
+                storageLocation.textContent = '本地文件';
+            } else {
+                storageLocation.textContent = '本地存储 (localStorage)';
+            }
+            
+            const lastSaved = localStorage.getItem('lastSaved');
+            if (lastSaved) {
+                lastSavedTime.textContent = new Date(lastSaved).toLocaleString();
+            } else {
+                lastSavedTime.textContent = '未知';
+            }
+        }
+
+        // 保存数据到本地文件
+        async function saveToFile() {
+            try {
+                // 检查是否有权限访问文件系统
+                if (!window.showSaveFilePicker) {
+                    console.log('浏览器不支持文件系统API，数据仅保存到localStorage');
+                    return;
+                }
+                
+                const data = {
+                    vocabulary: vocabularyData,
+                    categories: categoriesData,
+                    lastSaved: new Date().toISOString()
+                };
+                
+                const dataStr = JSON.stringify(data, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                
+                // 如果有保存的文件句柄，直接保存
+                if (window.vocabularyFileHandle) {
+                    const writable = await window.vocabularyFileHandle.createWritable();
+                    await writable.write(dataBlob);
+                    await writable.close();
+                    console.log('数据已保存到文件');
+                } else {
+                    // 否则提示用户选择保存位置
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: 'vocabulary-data.json',
+                        types: [{
+                            description: 'JSON文件',
+                            accept: { 'application/json': ['.json'] }
+                        }]
+                    });
+                    
+                    window.vocabularyFileHandle = handle;
+                    const writable = await handle.createWritable();
+                    await writable.write(dataBlob);
+                    await writable.close();
+                    console.log('数据已保存到文件');
+                }
+                
+                // 更新存储状态
+                updateStorageStatus();
+            } catch (error) {
+                console.error('保存文件失败:', error);
+            }
+        }
+
+        // 生成唯一ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('stats-total').textContent = vocabularyData.length;
+            document.getElementById('stats-important').textContent = vocabularyData.filter(word => word.isImportant).length;
+            document.getElementById('stats-categories').textContent = categoriesData.length;
+        }
+
+        // 绑定导航事件
+        function bindNavigationEvents() {
+            // 导航按钮点击事件
+            document.querySelectorAll('nav button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.id.replace('nav-', 'section-');
+                    showSection(targetId);
+                    
+                    // 更新导航按钮样式
+                    document.querySelectorAll('nav button').forEach(btn => {
+                        btn.classList.remove('bg-primary', 'text-white');
+                        btn.classList.add('hover:bg-gray-100');
+                    });
+                    this.classList.add('bg-primary', 'text-white');
+                    this.classList.remove('hover:bg-gray-100');
+                });
+            });
+            
+            // 首页功能按钮点击事件
+            document.getElementById('home-add-btn').addEventListener('click', () => showSection('section-add'));
+            document.getElementById('home-library-btn').addEventListener('click', () => showSection('section-library'));
+            document.getElementById('home-training-btn').addEventListener('click', () => showSection('section-training'));
+        }
+
+        // 显示指定部分
+        function showSection(sectionId) {
+            // 隐藏所有部分
+            document.querySelectorAll('main > section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // 显示指定部分
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // 更新当前部分
+            currentSection = sectionId;
+            
+            // 特殊处理
+            if (sectionId === 'section-library') {
+                loadVocabularyTable();
+            } else if (sectionId === 'section-training') {
+                resetTraining();
+            } else if (sectionId === 'section-settings') {
+                loadCategoriesList();
+            }
+        }
+
+        // 绑定表单事件
+        function bindFormEvents() {
+            // 添加词汇表单提交事件
+            document.getElementById('add-word-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addNewWord();
+            });
+            
+            // 取消添加按钮点击事件
+            document.getElementById('cancel-add-btn').addEventListener('click', function() {
+                showSection('section-home');
+            });
+            
+            // 添加分类按钮点击事件
+            document.getElementById('add-category-btn').addEventListener('click', function() {
+                const newCategoryInput = document.getElementById('new-category-input');
+                const categoryName = newCategoryInput.value.trim();
+                
+                if (categoryName) {
+                    addNewCategory(categoryName);
+                    newCategoryInput.value = '';
+                }
+            });
+            
+            // 词汇搜索事件
+            document.getElementById('search-input').addEventListener('input', function() {
+                loadVocabularyTable();
+            });
+            
+            // 分类筛选事件
+            document.getElementById('filter-category').addEventListener('change', function() {
+                loadVocabularyTable();
+            });
+            
+            // 排序方式事件
+            document.getElementById('sort-method').addEventListener('change', function() {
+                loadVocabularyTable();
+            });
+        }
+
+        // 初始化分类选择器
+        function initCategorySelectors() {
+            // 添加词汇页面的分类选择器
+            const categorySelector = document.getElementById('category-selector');
+            categorySelector.innerHTML = '';
+            
+            categoriesData.forEach(category => {
+                const label = document.createElement('label');
+                label.className = 'inline-flex items-center';
+                label.innerHTML = `
+                    <input type="checkbox" name="category" value="${category.id}" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                    <span class="ml-2 text-sm text-textDark">${category.name}</span>
+                `;
+                categorySelector.appendChild(label);
+            });
+            
+            // 词库页面的分类筛选器
+            const filterCategory = document.getElementById('filter-category');
+            filterCategory.innerHTML = '<option value="all">全部分类</option>';
+            
+            categoriesData.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                filterCategory.appendChild(option);
+            });
+            
+            // 训练页面的分类选择器
+            const trainingCategory = document.getElementById('training-category');
+            trainingCategory.innerHTML = '';
+            
+            categoriesData.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                trainingCategory.appendChild(option);
+            });
+        }
+
+        // 添加新词汇
+        function addNewWord() {
+            const wordInput = document.getElementById('word-input');
+            const definitionInput = document.getElementById('definition-input');
+            const contextInput = document.getElementById('context-input');
+            const exampleInput = document.getElementById('example-input');
+            const importantCheckbox = document.getElementById('important-checkbox');
+            
+            const word = wordInput.value.trim();
+            const definition = definitionInput.value.trim();
+            const context = contextInput.value.trim();
+            const examples = exampleInput.value.trim().split('\n').filter(example => example.trim() !== '');
+            const isImportant = importantCheckbox.checked;
+            
+            // 获取选中的分类
+            const selectedCategories = [];
+            document.querySelectorAll('input[name="category"]:checked').forEach(checkbox => {
+                selectedCategories.push(checkbox.value);
+            });
+            
+            // 验证输入
+            if (!word) {
+                alert('请输入词汇');
+                return;
+            }
+            
+            if (!definition) {
+                alert('请输入词汇含义');
+                return;
+            }
+            
+            if (selectedCategories.length === 0) {
+                alert('请至少选择一个分类');
+                return;
+            }
+            
+            // 创建新词汇对象
+            const newWord = {
+                id: generateId(),
+                word: word,
+                definition: definition,
+                context: context,
+                examples: examples.length > 0 ? examples : ['暂无示例'],
+                categories: selectedCategories,
+                isImportant: isImportant,
+                addTime: Date.now(),
+                reviewCount: 0,
+                lastReviewTime: null,
+                correctRate: 1
+            };
+            
+            // 添加到词汇数据
+            vocabularyData.push(newWord);
+            
+            // 保存数据
+            saveData();
+            
+            // 重置表单
+            wordInput.value = '';
+            definitionInput.value = '';
+            contextInput.value = '';
+            exampleInput.value = '';
+            importantCheckbox.checked = false;
+            document.querySelectorAll('input[name="category"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // 显示成功提示
+            showModal('保存成功', `词汇"${word}"已成功添加到词库！`, '查看词库', '继续添加', function() {
+                showSection('section-library');
+            }, function() {
+                wordInput.focus();
+            });
+            
+            // 更新最近词汇
+            loadRecentWords();
+        }
+
+        // 加载最近词汇
+        function loadRecentWords() {
+            const recentWordsContainer = document.getElementById('recent-words');
+            
+            if (vocabularyData.length === 0) {
+                recentWordsContainer.innerHTML = '<p class="text-textLight text-center py-4">你还没有添加任何词汇，点击"添加词汇"开始使用</p>';
+                return;
+            }
+            
+            // 按添加时间排序，取最近的5个
+            const recentWords = [...vocabularyData]
+                .sort((a, b) => b.addTime - a.addTime)
+                .slice(0, 5);
+            
+            recentWordsContainer.innerHTML = '';
+            
+            recentWords.forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow';
+                
+                const categoriesHtml = word.categories.map(catId => {
+                    const category = categoriesData.find(c => c.id === catId);
+                    return category ? category.name : '';
+                }).filter(Boolean).join('、');
+                
+                wordElement.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-lg font-medium ${word.isImportant ? 'text-accent' : ''}">${word.word}</h4>
+                        <span class="text-xs text-textLight">${formatDate(word.addTime)}</span>
+                    </div>
+                    <p class="text-textLight text-sm mt-1">${word.definition.substring(0, 50)}${word.definition.length > 50 ? '...' : ''}</p>
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        ${word.categories.map(catId => {
+                            const category = categoriesData.find(c => c.id === catId);
+                            return category ? `<span class="category-tag">${category.name}</span>` : '';
+                        }).join('')}
+                    </div>
+                `;
+                
+                recentWordsContainer.appendChild(wordElement);
+            });
+        }
+
+        // 加载词汇表格
+        function loadVocabularyTable() {
+            const tableBody = document.getElementById('vocabulary-table-body');
+            const noWordsMessage = document.getElementById('no-words-message');
+            const searchInput = document.getElementById('search-input');
+            const filterCategory = document.getElementById('filter-category');
+            const sortMethod = document.getElementById('sort-method');
+            
+            // 获取搜索关键词
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            // 获取筛选分类
+            const selectedCategory = filterCategory.value;
+            
+            // 筛选词汇
+            let filteredWords = [...vocabularyData];
+            
+            // 按搜索词筛选
+            if (searchTerm) {
+                filteredWords = filteredWords.filter(word => 
+                    word.word.toLowerCase().includes(searchTerm) || 
+                    word.definition.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // 按分类筛选
+            if (selectedCategory !== 'all') {
+                filteredWords = filteredWords.filter(word => 
+                    word.categories.includes(selectedCategory)
+                );
+            }
+            
+            // 排序
+            switch (sortMethod.value) {
+                case 'time-desc':
+                    filteredWords.sort((a, b) => b.addTime - a.addTime);
+                    break;
+                case 'time-asc':
+                    filteredWords.sort((a, b) => a.addTime - b.addTime);
+                    break;
+                case 'alphabetical':
+                    filteredWords.sort((a, b) => a.word.localeCompare(b.word));
+                    break;
+                case 'important':
+                    filteredWords.sort((a, b) => {
+                        if (a.isImportant && !b.isImportant) return -1;
+                        if (!a.isImportant && b.isImportant) return 1;
+                        return b.addTime - a.addTime;
+                    });
+                    break;
+            }
+            
+            // 显示或隐藏无词汇消息
+            if (filteredWords.length === 0) {
+                tableBody.innerHTML = '';
+                noWordsMessage.classList.remove('hidden');
+            } else {
+                noWordsMessage.classList.add('hidden');
+                
+                // 生成表格内容
+                tableBody.innerHTML = '';
+                
+                filteredWords.forEach(word => {
+                    const row = document.createElement('tr');
+                    
+                    const categoriesHtml = word.categories.map(catId => {
+                        const category = categoriesData.find(c => c.id === catId);
+                        return category ? `<span class="category-tag">${category.name}</span>` : '';
+                    }).join('');
+                    
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="${word.isImportant ? 'important-tag' : ''} font-medium">${word.word}</span>
+                                ${word.isImportant ? '<span class="ml-1 text-accent">🔴</span>' : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex flex-wrap gap-1">
+                                ${categoriesHtml}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-textDark">${word.definition.substring(0, 100)}${word.definition.length > 100 ? '...' : ''}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-textDark">${word.examples[0].substring(0, 100)}${word.examples[0].length > 100 ? '...' : ''}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button class="text-primary hover:text-blue-800 mr-3 edit-word-btn" data-id="${word.id}">
+                                <i class="fa fa-pencil"></i> 编辑
+                            </button>
+                            <button class="text-red-600 hover:text-red-800 delete-word-btn" data-id="${word.id}">
+                                <i class="fa fa-trash"></i> 删除
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                // 绑定编辑和删除按钮事件
+                document.querySelectorAll('.edit-word-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const wordId = this.getAttribute('data-id');
+                        editWord(wordId);
+                    });
+                });
+                
+                document.querySelectorAll('.delete-word-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const wordId = this.getAttribute('data-id');
+                        deleteWord(wordId);
+                    });
+                });
+            }
+        }
+
+        // 编辑词汇
+        function editWord(wordId) {
+            const word = vocabularyData.find(w => w.id === wordId);
+            
+            if (!word) return;
+            
+            // 填充表单
+            document.getElementById('word-input').value = word.word;
+            document.getElementById('definition-input').value = word.definition;
+            document.getElementById('context-input').value = word.context;
+            document.getElementById('example-input').value = word.examples.join('\n');
+            document.getElementById('important-checkbox').checked = word.isImportant;
+            
+            // 选中分类
+            document.querySelectorAll('input[name="category"]').forEach(checkbox => {
+                checkbox.checked = word.categories.includes(checkbox.value);
+            });
+            
+            // 显示添加词汇页面
+            showSection('section-add');
+            
+            // 修改表单提交事件
+            const originalSubmitHandler = document.getElementById('add-word-form').onsubmit;
+            
+            document.getElementById('add-word-form').onsubmit = function(e) {
+                e.preventDefault();
+                
+                // 更新词汇
+                word.word = document.getElementById('word-input').value.trim();
+                word.definition = document.getElementById('definition-input').value.trim();
+                word.context = document.getElementById('context-input').value.trim();
+                word.examples = document.getElementById('example-input').value.trim().split('\n').filter(example => example.trim() !== '');
+                word.isImportant = document.getElementById('important-checkbox').checked;
+                
+                // 获取选中的分类
+                const selectedCategories = [];
+                document.querySelectorAll('input[name="category"]:checked').forEach(checkbox => {
+                    selectedCategories.push(checkbox.value);
+                });
+                word.categories = selectedCategories;
+                
+                // 保存数据
+                saveData();
+                
+                // 显示成功提示
+                showModal('编辑成功', `词汇"${word.word}"已成功更新！`, '确定', null, function() {
+                    showSection('section-library');
+                });
+                
+                // 恢复原始提交事件
+                document.getElementById('add-word-form').onsubmit = originalSubmitHandler;
+                
+                // 重置表单
+                document.getElementById('add-word-form').reset();
+            };
+        }
+
+        // 删除词汇
+        function deleteWord(wordId) {
+            const word = vocabularyData.find(w => w.id === wordId);
+            
+            if (!word) return;
+            
+            showModal('确认删除', `确定要删除词汇"${word.word}"吗？此操作不可撤销。`, '取消', '删除', null, function() {
+                // 从数组中删除
+                vocabularyData = vocabularyData.filter(w => w.id !== wordId);
+                
+                // 保存数据
+                saveData();
+                
+                // 重新加载表格
+                loadVocabularyTable();
+                
+                // 更新最近词汇
+                loadRecentWords();
+            });
+        }
+
+        // 添加新分类
+        function addNewCategory(categoryName) {
+            // 检查分类名是否已存在
+            if (categoriesData.some(c => c.name === categoryName)) {
+                alert('该分类已存在');
+                return;
+            }
+            
+            // 创建新分类
+            const newCategory = {
+                id: generateId(),
+                name: categoryName,
+                default: false
+            };
+            
+            // 添加到分类数据
+            categoriesData.push(newCategory);
+            
+            // 保存数据
+            saveData();
+            
+            // 重新初始化分类选择器
+            initCategorySelectors();
+            
+            // 重新加载词汇表格
+            if (currentSection === 'section-library') {
+                loadVocabularyTable();
+            }
+            
+            // 重新加载分类列表
+            if (currentSection === 'section-settings') {
+                loadCategoriesList();
+            }
+        }
+
+        // 绑定训练事件
+        function bindTrainingEvents() {
+            // 训练模式切换事件
+            document.querySelectorAll('input[name="training-mode"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const categorySelection = document.getElementById('category-selection');
+                    
+                    if (this.value === 'category') {
+                        categorySelection.classList.remove('hidden');
+                    } else {
+                        categorySelection.classList.add('hidden');
+                    }
+                });
+            });
+            
+            // 开始训练按钮点击事件
+            document.getElementById('start-training-btn').addEventListener('click', function() {
+                startTraining();
+            });
+            
+            // 查看答案按钮点击事件
+            document.getElementById('show-answer-btn').addEventListener('click', function() {
+                showAnswer();
+            });
+            
+            // 下一题按钮点击事件
+            document.getElementById('next-question-btn').addEventListener('click', function() {
+                nextQuestion();
+            });
+            
+            // 上一题按钮点击事件
+            document.getElementById('prev-question-btn').addEventListener('click', function() {
+                prevQuestion();
+            });
+            
+            // 重新开始训练按钮点击事件
+            document.getElementById('restart-training-btn').addEventListener('click', function() {
+                resetTraining();
+            });
+            
+            // 复习错误词汇按钮点击事件
+            document.getElementById('review-words-btn').addEventListener('click', function() {
+                reviewWrongWords();
+            });
+        }
+
+        // 开始训练
+        function startTraining() {
+            // 获取训练设置
+            const trainingMode = document.querySelector('input[name="training-mode"]:checked').value;
+            const wordCount = parseInt(document.getElementById('word-count').value);
+            const selectedCategory = document.getElementById('training-category').value;
+            
+            // 获取选中的题型
+            const questionTypes = [];
+            document.querySelectorAll('input[name="training-type"]:checked').forEach(checkbox => {
+                questionTypes.push(checkbox.value);
+            });
+            
+            if (questionTypes.length === 0) {
+                alert('请至少选择一种训练题型');
+                return;
+            }
+            
+            // 根据训练模式选择词汇
+            let selectedWords = [];
+            
+            switch (trainingMode) {
+                case 'random':
+                    // 随机选择词汇
+                    selectedWords = getRandomWords(vocabularyData, wordCount);
+                    break;
+                case 'category':
+                    // 按分类选择词汇
+                    const categoryWords = vocabularyData.filter(word => word.categories.includes(selectedCategory));
+                    selectedWords = getRandomWords(categoryWords, wordCount);
+                    break;
+                case 'important':
+                    // 优先选择重点词
+                    const importantWords = vocabularyData.filter(word => word.isImportant);
+                    const otherWords = vocabularyData.filter(word => !word.isImportant);
+                    
+                    // 先从重点词中选择，不足再从其他词中补充
+                    const importantCount = Math.min(importantWords.length, Math.ceil(wordCount * 0.7));
+                    const otherCount = wordCount - importantCount;
+                    
+                    selectedWords = [
+                        ...getRandomWords(importantWords, importantCount),
+                        ...getRandomWords(otherWords, otherCount)
+                    ];
+                    break;
+            }
+            
+            if (selectedWords.length === 0) {
+                alert('没有符合条件的词汇，请添加更多词汇或调整训练设置');
+                return;
+            }
+            
+            // 准备训练数据
+            trainingData = {
+                words: selectedWords,
+                currentIndex: 0,
+                answers: [],
+                questionTypes: questionTypes
+            };
+            
+            // 生成问题
+            generateQuestions();
+            
+            // 显示训练进行中页面
+            document.getElementById('training-settings').classList.add('hidden');
+            document.getElementById('training-in-progress').classList.remove('hidden');
+            document.getElementById('training-results').classList.add('hidden');
+            
+            // 显示第一题
+            showQuestion(0);
+        }
+
+        // 生成随机词汇数组
+        function getRandomWords(words, count) {
+            const shuffled = [...words].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, Math.min(count, shuffled.length));
+        }
+
+        // 生成问题
+        function generateQuestions() {
+            trainingData.answers = [];
+            
+            trainingData.words.forEach(word => {
+                // 为每个词汇生成问题
+                const questionTypes = [...trainingData.questionTypes];
+                
+                // 随机选择一种题型
+                const randomIndex = Math.floor(Math.random() * questionTypes.length);
+                const questionType = questionTypes[randomIndex];
+                
+                let question = {};
+                
+                switch (questionType) {
+                    case 'guess-from-definition':
+                        question = generateGuessFromDefinitionQuestion(word);
+                        break;
+                    case 'guess-from-category':
+                        question = generateGuessFromCategoryQuestion(word);
+                        break;
+                }
+                
+                trainingData.answers.push({
+                    word: word,
+                    question: question,
+                    userAnswer: null,
+                    isCorrect: null
+                });
+            });
+        }
+
+        // 生成根据释义猜词问题
+        function generateGuessFromDefinitionQuestion(word) {
+            // 生成4个选项，其中一个是正确的
+            const correctOption = word.word;
+            
+            // 从其他词汇中选择3个不同的词汇
+            const otherWords = vocabularyData.filter(w => w.id !== word.id);
+            const shuffled = [...otherWords].sort(() => 0.5 - Math.random());
+            const wrongOptions = shuffled.slice(0, 3).map(w => w.word);
+            
+            // 合并选项并随机排序
+            const options = [correctOption, ...wrongOptions].sort(() => 0.5 - Math.random());
+            
+            return {
+                type: 'guess-from-definition',
+                question: `根据以下释义，猜测对应的词汇：${word.definition}`,
+                options: options,
+                answer: correctOption,
+                hint: word.categories.map(catId => {
+                    const category = categoriesData.find(c => c.id === catId);
+                    return category ? category.name : '';
+                }).join('、')
+            };
+        }
+
+        // 生成根据分类猜词问题
+        function generateGuessFromCategoryQuestion(word) {
+            // 获取词汇的分类
+            const categories = word.categories.map(catId => {
+                const category = categoriesData.find(c => c.id === catId);
+                return category ? category.name : '';
+            }).filter(Boolean);
+            
+            // 生成4个选项，其中一个是正确的
+            const correctOption = word.word;
+            
+            // 从同一分类的其他词汇中选择，如果不够则从其他分类补充
+            const sameCategoryWords = vocabularyData.filter(w => 
+                w.id !== word.id && 
+                w.categories.some(catId => word.categories.includes(catId))
+            );
+            
+            let wrongOptions = [];
+            if (sameCategoryWords.length >= 3) {
+                wrongOptions = sameCategoryWords
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 3)
+                    .map(w => w.word);
+            } else {
+                // 如果同一分类的词汇不够，从其他词汇中补充
+                const otherWords = vocabularyData.filter(w => w.id !== word.id);
+                wrongOptions = [
+                    ...sameCategoryWords.map(w => w.word),
+                    ...otherWords
+                        .filter(w => !sameCategoryWords.some(sw => sw.id === w.id))
+                        .sort(() => 0.5 - Math.random())
+                        .slice(0, 3 - sameCategoryWords.length)
+                        .map(w => w.word)
+                ];
+            }
+            
+            // 合并选项并随机排序
+            const options = [correctOption, ...wrongOptions].sort(() => 0.5 - Math.random());
+            
+            return {
+                type: 'guess-from-category',
+                question: `根据以下分类，猜测对应的词汇：${categories.join('、')}`,
+                options: options,
+                answer: correctOption,
+                hint: word.definition.substring(0, 50) + (word.definition.length > 50 ? '...' : '')
+            };
+        }
+
+
+
+        // 显示问题
+        function showQuestion(index) {
+            const questionContainer = document.getElementById('question-container');
+            const answerContainer = document.getElementById('answer-container');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const showAnswerBtn = document.getElementById('show-answer-btn');
+            const nextQuestionBtn = document.getElementById('next-question-btn');
+            const prevQuestionBtn = document.getElementById('prev-question-btn');
+            
+            // 更新进度
+            document.getElementById('training-progress').textContent = `${index + 1}/${trainingData.answers.length}`;
+            
+            // 隐藏答案和反馈
+            answerContainer.classList.add('hidden');
+            feedbackContainer.classList.add('hidden');
+            
+            // 显示查看答案按钮
+            showAnswerBtn.classList.remove('hidden');
+            
+            // 更新按钮状态
+            prevQuestionBtn.disabled = index === 0;
+            nextQuestionBtn.textContent = index === trainingData.answers.length - 1 ? '完成训练' : '下一题';
+            
+            // 获取当前问题
+            const currentAnswer = trainingData.answers[index];
+            const question = currentAnswer.question;
+            
+            // 根据题型生成问题内容
+            let questionHtml = '';
+            
+            switch (question.type) {
+                case 'guess-from-definition':
+                    questionHtml = `
+                        <div class="mb-4">
+                            <h3 class="text-xl font-bold mb-2">${question.question}</h3>
+                            <p class="text-textLight text-sm">分类提示：${question.hint}</p>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            ${question.options.map((option, i) => `
+                                <label class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="guess-answer" value="${option}" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                    <span class="ml-2">${option}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                    break;
+                case 'guess-from-category':
+                    questionHtml = `
+                        <div class="mb-4">
+                            <h3 class="text-xl font-bold mb-2">${question.question}</h3>
+                            <p class="text-textLight text-sm">释义提示：${question.hint}</p>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            ${question.options.map((option, i) => `
+                                <label class="block p-3 border rounded-md cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="guess-answer" value="${option}" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                    <span class="ml-2">${option}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `;
+                    break;
+            }
+            
+            questionContainer.innerHTML = questionHtml;
+            
+            // 如果用户已经回答过，显示之前的答案
+            if (currentAnswer.userAnswer !== null) {
+                switch (question.type) {
+                    case 'guess-from-definition':
+                    case 'guess-from-category':
+                        const radio = document.querySelector(`input[name="guess-answer"][value="${currentAnswer.userAnswer}"]`);
+                        if (radio) radio.checked = true;
+                        break;
+                }
+            }
+        }
+
+        // 显示答案
+        function showAnswer() {
+            const currentAnswer = trainingData.answers[trainingData.currentIndex];
+            const question = currentAnswer.question;
+            const answerContainer = document.getElementById('answer-container');
+            const feedbackContainer = document.getElementById('feedback-container');
+            const showAnswerBtn = document.getElementById('show-answer-btn');
+            
+            // 获取用户答案
+            let userAnswer = null;
+            
+            switch (question.type) {
+                case 'guess-from-definition':
+                case 'guess-from-category':
+                    const selectedOption = document.querySelector('input[name="guess-answer"]:checked');
+                    userAnswer = selectedOption ? selectedOption.value : null;
+                    break;
+            }
+            
+            // 如果用户没有选择答案，提示选择
+            if (!userAnswer) {
+                alert('请选择一个答案');
+                return;
+            }
+            
+            // 保存用户答案
+            currentAnswer.userAnswer = userAnswer;
+            
+            // 判断是否正确
+            let isCorrect = false;
+            
+            switch (question.type) {
+                case 'guess-from-definition':
+                case 'guess-from-category':
+                    isCorrect = userAnswer === question.answer;
+                    break;
+            }
+            
+            currentAnswer.isCorrect = isCorrect;
+            
+            // 更新词汇的复习记录
+            const word = currentAnswer.word;
+            word.reviewCount++;
+            word.lastReviewTime = Date.now();
+            
+            // 更新正确率
+            const totalReviews = word.reviewCount;
+            const correctReviews = Math.round(word.correctRate * (totalReviews - 1)) + (isCorrect ? 1 : 0);
+            word.correctRate = correctReviews / totalReviews;
+            
+            // 如果正确率低于0.6，标记为重点词
+            if (word.correctRate < 0.6) {
+                word.isImportant = true;
+            }
+            
+            // 保存数据
+            saveData();
+            
+            // 生成答案内容
+            let answerHtml = '';
+            
+            switch (question.type) {
+                case 'guess-from-definition':
+                case 'guess-from-category':
+                    answerHtml = `
+                        <h4 class="font-semibold mb-2">正确答案：</h4>
+                        <p class="text-textDark mb-4 text-lg font-medium">${question.answer}</p>
+                        <h4 class="font-semibold mb-2">词汇详解：</h4>
+                        <p class="text-textDark mb-2"><strong>含义：</strong>${currentAnswer.word.definition}</p>
+                        <p class="text-textDark mb-2"><strong>适用场景：</strong>${currentAnswer.word.context}</p>
+                        <p class="text-textDark mb-2"><strong>分类：</strong>
+                            ${currentAnswer.word.categories.map(catId => {
+                                const category = categoriesData.find(c => c.id === catId);
+                                return category ? `<span class="category-tag">${category.name}</span>` : '';
+                            }).join('')}
+                        </p>
+                        <p class="text-textDark"><strong>使用示例：</strong></p>
+                        <ul class="list-disc pl-5 text-textDark">
+                            ${currentAnswer.word.examples.map(example => `<li>${example}</li>`).join('')}
+                        </ul>
+                    `;
+                    break;
+            }
+            
+            answerContainer.innerHTML = answerHtml;
+            answerContainer.classList.remove('hidden');
+            
+            // 生成反馈内容
+            feedbackContainer.className = `mb-4 p-4 rounded-md ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+            feedbackContainer.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fa ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} mr-2"></i>
+                    <span>${isCorrect ? '回答正确！' : '回答错误，请继续努力！'}</span>
+                </div>
+            `;
+            feedbackContainer.classList.remove('hidden');
+            
+            // 隐藏查看答案按钮
+            showAnswerBtn.classList.add('hidden');
+        }
+
+        // 下一题
+        function nextQuestion() {
+            const currentIndex = trainingData.currentIndex;
+            
+            // 如果用户还没有查看答案，先显示答案
+            if (trainingData.answers[currentIndex].userAnswer === null) {
+                showAnswer();
+                return;
+            }
+            
+            // 如果是最后一题，显示结果
+            if (currentIndex === trainingData.answers.length - 1) {
+                showTrainingResults();
+                return;
+            }
+            
+            // 显示下一题
+            trainingData.currentIndex++;
+            showQuestion(trainingData.currentIndex);
+        }
+
+        // 上一题
+        function prevQuestion() {
+            if (trainingData.currentIndex > 0) {
+                trainingData.currentIndex--;
+                showQuestion(trainingData.currentIndex);
+            }
+        }
+
+        // 显示训练结果
+        function showTrainingResults() {
+            // 统计正确题数
+            const correctCount = trainingData.answers.filter(a => a.isCorrect).length;
+            const totalCount = trainingData.answers.length;
+            const correctRate = Math.round((correctCount / totalCount) * 100);
+            
+            // 更新结果显示
+            document.getElementById('total-questions').textContent = totalCount;
+            document.getElementById('correct-questions').textContent = correctCount;
+            document.getElementById('correct-rate').textContent = `${correctRate}%`;
+            
+            // 生成复习建议
+            const reviewSuggestions = document.getElementById('review-suggestions');
+            let suggestionsHtml = '';
+            
+            if (correctRate >= 90) {
+                suggestionsHtml = `
+                    <p class="mb-2">太棒了！你对这些词汇掌握得非常好。</p>
+                    <p>建议：可以尝试添加更多新词汇，或者选择更有挑战性的训练模式。</p>
+                `;
+            } else if (correctRate >= 70) {
+                suggestionsHtml = `
+                    <p class="mb-2">不错！你对大部分词汇都有很好的掌握。</p>
+                    <p>建议：重点复习以下词汇：</p>
+                    <ul class="list-disc pl-5 mt-2">
+                        ${trainingData.answers.filter(a => !a.isCorrect).map(a => `<li>${a.word.word}</li>`).join('')}
+                    </ul>
+                `;
+            } else {
+                suggestionsHtml = `
+                    <p class="mb-2">继续努力！你已经掌握了一部分词汇，但还有提升空间。</p>
+                    <p>建议：</p>
+                    <ul class="list-disc pl-5 mt-2">
+                        <li>重点复习错误的词汇</li>
+                        <li>增加复习频率</li>
+                        <li>尝试使用这些词汇进行写作练习</li>
+                    </ul>
+                `;
+            }
+            
+            reviewSuggestions.innerHTML = suggestionsHtml;
+            
+            // 显示结果页面
+            document.getElementById('training-settings').classList.add('hidden');
+            document.getElementById('training-in-progress').classList.add('hidden');
+            document.getElementById('training-results').classList.remove('hidden');
+        }
+
+        // 重置训练
+        function resetTraining() {
+            trainingData = {
+                words: [],
+                currentIndex: 0,
+                answers: [],
+                questionTypes: []
+            };
+            
+            document.getElementById('training-settings').classList.remove('hidden');
+            document.getElementById('training-in-progress').classList.add('hidden');
+            document.getElementById('training-results').classList.add('hidden');
+        }
+
+        // 复习错误词汇
+        function reviewWrongWords() {
+            const wrongWords = trainingData.answers.filter(a => !a.isCorrect).map(a => a.word);
+            
+            if (wrongWords.length === 0) {
+                alert('恭喜！你没有错误的词汇需要复习');
+                return;
+            }
+            
+            // 准备训练数据
+            trainingData = {
+                words: wrongWords,
+                currentIndex: 0,
+                answers: [],
+                questionTypes: trainingData.questionTypes
+            };
+            
+            // 生成问题
+            generateQuestions();
+            
+            // 显示训练进行中页面
+            document.getElementById('training-settings').classList.add('hidden');
+            document.getElementById('training-in-progress').classList.remove('hidden');
+            document.getElementById('training-results').classList.add('hidden');
+            
+            // 显示第一题
+            showQuestion(0);
+        }
+
+        // 绑定设置事件
+        function bindSettingsEvents() {
+            // 导出数据按钮点击事件
+            document.getElementById('export-data-btn').addEventListener('click', function() {
+                exportData();
+            });
+            
+            // 保存到本地文件按钮点击事件
+            document.getElementById('save-to-file-btn').addEventListener('click', async function() {
+                try {
+                    await saveToFile();
+                    showModal('保存成功', '您的词库已成功保存到本地文件！');
+                } catch (error) {
+                    console.error('保存文件失败:', error);
+                    showModal('保存失败', '保存到本地文件时出错，请重试。');
+                }
+            });
+            
+            // 导入数据输入变化事件
+            document.getElementById('import-data-input').addEventListener('change', function(e) {
+                importData(e.target.files[0]);
+            });
+            
+            // 清空数据按钮点击事件
+            document.getElementById('clear-data-btn').addEventListener('click', function() {
+                clearData();
+            });
+            
+            // 创建分类按钮点击事件
+            document.getElementById('create-category-btn').addEventListener('click', function() {
+                const newCategoryName = document.getElementById('new-category-name').value.trim();
+                
+                if (newCategoryName) {
+                    addNewCategory(newCategoryName);
+                    document.getElementById('new-category-name').value = '';
+                }
+            });
+        }
+
+        // 加载分类列表
+        function loadCategoriesList() {
+            const categoriesList = document.getElementById('categories-list');
+            categoriesList.innerHTML = '';
+            
+            categoriesData.forEach(category => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'flex justify-between items-center p-3 bg-gray-50 rounded-md';
+                
+                categoryElement.innerHTML = `
+                    <span>${category.name} ${category.default ? '<span class="text-xs text-textLight">(默认)</span>' : ''}</span>
+                    ${!category.default ? `
+                        <button class="text-red-600 hover:text-red-800 delete-category-btn" data-id="${category.id}">
+                            <i class="fa fa-trash"></i> 删除
+                        </button>
+                    ` : ''}
+                `;
+                
+                categoriesList.appendChild(categoryElement);
+            });
+            
+            // 绑定删除分类按钮事件
+            document.querySelectorAll('.delete-category-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const categoryId = this.getAttribute('data-id');
+                    deleteCategory(categoryId);
+                });
+            });
+        }
+
+        // 删除分类
+        function deleteCategory(categoryId) {
+            const category = categoriesData.find(c => c.id === categoryId);
+            
+            if (!category || category.default) return;
+            
+            // 检查是否有词汇使用该分类
+            const wordsWithCategory = vocabularyData.filter(word => word.categories.includes(categoryId));
+            
+            if (wordsWithCategory.length > 0) {
+                showModal('无法删除', `分类"${category.name}"正在被 ${wordsWithCategory.length} 个词汇使用，请先修改这些词汇的分类。`, '确定');
+                return;
+            }
+            
+            showModal('确认删除', `确定要删除分类"${category.name}"吗？此操作不可撤销。`, '取消', '删除', null, function() {
+                // 从数组中删除
+                categoriesData = categoriesData.filter(c => c.id !== categoryId);
+                
+                // 保存数据
+                saveData();
+                
+                // 重新加载分类列表
+                loadCategoriesList();
+                
+                // 重新初始化分类选择器
+                initCategorySelectors();
+                
+                // 重新加载词汇表格
+                if (currentSection === 'section-library') {
+                    loadVocabularyTable();
+                }
+            });
+        }
+
+        // 导出数据
+        function exportData() {
+            const data = {
+                vocabulary: vocabularyData,
+                categories: categoriesData,
+                exportDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `vocabulary-data-${formatDateForFilename(new Date())}.json`;
+            link.click();
+        }
+
+        // 导入数据
+        function importData(file) {
+            if (!file) return;
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (!data.vocabulary || !data.categories) {
+                        alert('无效的数据文件');
+                        return;
+                    }
+                    
+                    showModal('确认导入', `确定要导入数据吗？这将覆盖当前的词库和分类设置。`, '取消', '导入', null, function() {
+                        vocabularyData = data.vocabulary;
+                        categoriesData = data.categories;
+                        
+                        // 保存数据
+                        saveData();
+                        
+                        // 重新初始化分类选择器
+                        initCategorySelectors();
+                        
+                        // 重新加载最近词汇
+                        loadRecentWords();
+                        
+                        // 重新加载词汇表格
+                        if (currentSection === 'section-library') {
+                            loadVocabularyTable();
+                        }
+                        
+                        // 重新加载分类列表
+                        if (currentSection === 'section-settings') {
+                            loadCategoriesList();
+                        }
+                        
+                        alert('数据导入成功');
+                    });
+                } catch (error) {
+                    alert('导入失败：无效的数据文件');
+                }
+            };
+            
+            reader.readAsText(file);
+        }
+
+        // 清空数据
+        function clearData() {
+            // 第一次确认：基本确认
+            showModal('确认清空', `
+                <p class="mb-4">您正在执行清空所有数据的操作，此操作不可撤销。</p>
+                <p class="mb-2 text-red-600 font-medium">清空后将删除：</p>
+                <ul class="list-disc pl-5 mb-4">
+                    <li>${vocabularyData.length} 个词汇</li>
+                    <li>${categoriesData.filter(c => !c.default).length} 个自定义分类</li>
+                </ul>
+                <p>确定要继续吗？</p>
+            `, '取消', '继续', null, function() {
+                // 第二次确认：输入确认码
+                showModal('二次确认', `
+                    <p class="mb-4">为了防止误操作，请输入 "DELETE" 确认：</p>
+                    <input type="text" id="clear-confirm-input" class="input-field w-full" placeholder="请输入 DELETE">
+                `, '取消', '确认', null, function() {
+                    const confirmInput = document.getElementById('clear-confirm-input');
+                    if (confirmInput && confirmInput.value.toUpperCase() === 'DELETE') {
+                        // 第三次确认：最终确认
+                        showModal('最终确认', `
+                            <p class="mb-4 text-red-600 font-medium">最后确认：</p>
+                            <p class="mb-2">此操作将永久删除所有数据，无法恢复。</p>
+                            <p>您确定要执行此操作吗？</p>
+                        `, '取消', '确认清空', null, function() {
+                            // 执行清空操作
+                            // 保留默认分类
+                            const defaultCategories = categoriesData.filter(c => c.default);
+                            
+                            vocabularyData = [];
+                            categoriesData = defaultCategories;
+                            
+                            // 保存数据
+                            saveData();
+                            
+                            // 重新初始化分类选择器
+                            initCategorySelectors();
+                            
+                            // 重新加载最近词汇
+                            loadRecentWords();
+                            
+                            // 重新加载词汇表格
+                            if (currentSection === 'section-library') {
+                                loadVocabularyTable();
+                            }
+                            
+                            // 重新加载分类列表
+                            if (currentSection === 'section-settings') {
+                                loadCategoriesList();
+                            }
+                            
+                            showModal('操作成功', '数据已清空');
+                        });
+                    } else {
+                        showModal('操作失败', '请输入正确的确认信息 "DELETE"');
+                    }
+                });
+            });
+        }
+
+        // 绑定模态框事件
+        function bindModalEvents() {
+            document.getElementById('close-modal-btn').addEventListener('click', function() {
+                hideModal();
+            });
+            
+            document.getElementById('modal-cancel-btn').addEventListener('click', function() {
+                hideModal();
+            });
+            
+            document.getElementById('modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    hideModal();
+                }
+            });
+        }
+
+        // 显示模态框
+        function showModal(title, content, cancelText, confirmText, cancelCallback, confirmCallback) {
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            const modalCancelBtn = document.getElementById('modal-cancel-btn');
+            const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+            
+            modalTitle.textContent = title;
+            modalContent.innerHTML = content;
+            
+            modalCancelBtn.textContent = cancelText || '取消';
+            modalConfirmBtn.textContent = confirmText || '确认';
+            
+            if (cancelText) {
+                modalCancelBtn.classList.remove('hidden');
+            } else {
+                modalCancelBtn.classList.add('hidden');
+            }
+            
+            if (confirmText) {
+                modalConfirmBtn.classList.remove('hidden');
+            } else {
+                modalConfirmBtn.classList.add('hidden');
+            }
+            
+            modalCancelBtn.onclick = function() {
+                hideModal();
+                if (cancelCallback) cancelCallback();
+            };
+            
+            modalConfirmBtn.onclick = function() {
+                hideModal();
+                if (confirmCallback) confirmCallback();
+            };
+            
+            modal.classList.remove('hidden');
+        }
+
+        // 隐藏模态框
+        function hideModal() {
+            document.getElementById('modal').classList.add('hidden');
+        }
+
+        // 格式化日期
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}`;
+        }
+
+        // 格式化日期（用于文件名）
+        function formatDateForFilename(date) {
+            return `${date.getFullYear()}${padZero(date.getMonth() + 1)}${padZero(date.getDate())}-${padZero(date.getHours())}${padZero(date.getMinutes())}`;
+        }
+
+        // 数字补零
+        function padZero(num) {
+            return num < 10 ? `0${num}` : num;
+        }
+    </script>
+
+</body></html>
